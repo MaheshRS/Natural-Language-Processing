@@ -1,2 +1,2 @@
 # Natural-Language-Processing
-This repository contains Natural Language Processing Samples
+The repository contains project related to Natural Language Processing
