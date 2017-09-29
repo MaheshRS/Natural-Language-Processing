@@ -221,8 +221,8 @@ public class HMMWeatherModel {
             /// Add the records.
             String columnTitle = String.format("(%s) %s", idx, s);
             veterbiDistributionColumns.add(String.valueOf(columnTitle));
-            hotStateRecord.put(String.valueOf(columnTitle), String.valueOf(probabilityHotState));
-            coldStateRecord.put(String.valueOf(columnTitle), String.valueOf(probabilityColdState));
+            hotStateRecord.put(String.valueOf(columnTitle), String.format("%e", probabilityHotState));
+            coldStateRecord.put(String.valueOf(columnTitle), String.format("%e", probabilityColdState));
 
             idx ++;
         }
