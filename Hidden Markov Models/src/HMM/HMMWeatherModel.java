@@ -21,7 +21,7 @@ public class HMMWeatherModel {
         public void printResult () {
             log("");
             log(String.format("Observed event sequence: %s", this.observedEventSequence));
-            log(String.format("MLE of the observed sequence: %s", String.valueOf(this.estimatedMLE)));
+            log(String.format("MLE of the observed sequence: %s", String.format("%e", this.estimatedMLE)));
             log(String.format("Predicted state sequence: %s", this.predictedStateSequence));
         }
     }
