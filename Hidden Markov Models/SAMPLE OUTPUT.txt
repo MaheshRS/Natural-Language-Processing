@@ -1,0 +1,76 @@
+$ sh run.sh '111222333222'
+
+[Transition Probability Distribution]
+| From/To | Hot | Cold |
+| Start   | 0.8 | 0.2  |
+| Hot     | 0.7 | 0.3  |
+| Cold    | 0.4 | 0.6  |
+
+[Emission Probability Distribution]
+| Observation/State | Hot | Cold |
+| 1                 | 0.4 | 0.4  |
+| 2                 | 0.3 | 0.4  |
+| 3                 | 0.3 | 0.2  |
+
+Observed event sequence: 111222333222
+MLE of the observed sequence: 1.992690e-08
+Predicted state sequence: HHHHHHHHHHHH
+
+[Veterbi Table Probability Distribution]
+| State/Observation | (0) 1        | (1) 1        | (2) 1        | (3) 2        | (4) 2        | (5) 2        | (6) 3        | (7) 3        | (8) 3        | (9) 2        | (10) 2       | (11) 2       |
+| Hot               | 3.200000e-01 | 8.960000e-02 | 2.508800e-02 | 5.268480e-03 | 1.106381e-03 | 2.323400e-04 | 4.879139e-05 | 1.024619e-05 | 2.151700e-06 | 4.518571e-07 | 9.488999e-08 | 1.992690e-08 |
+| Cold              | 8.000000e-02 | 3.840000e-02 | 1.075200e-02 | 3.010560e-03 | 7.225344e-04 | 1.734083e-04 | 2.080899e-05 | 2.927484e-06 | 6.147716e-07 | 2.582041e-07 | 6.196897e-08 | 1.487255e-08 |
+
+
+
+
+
+
+$ sh run.sh '11222222'
+
+[Transition Probability Distribution]
+| From/To | Hot | Cold |
+| Start   | 0.8 | 0.2  |
+| Hot     | 0.7 | 0.3  |
+| Cold    | 0.4 | 0.6  |
+
+[Emission Probability Distribution]
+| Observation/State | Hot | Cold |
+| 1                 | 0.4 | 0.4  |
+| 2                 | 0.3 | 0.4  |
+| 3                 | 0.3 | 0.2  |
+
+Observed event sequence: 11222222
+MLE of the observed sequence: 8.561413e-06
+Predicted state sequence: HHCCCCCC
+
+[Veterbi Table Probability Distribution]
+| State/Observation | (0) 1        | (1) 1        | (2) 2        | (3) 2        | (4) 2        | (5) 2        | (6) 2        | (7) 2        |
+| Hot               | 3.200000e-01 | 8.960000e-02 | 1.881600e-02 | 3.951360e-03 | 8.297856e-04 | 1.742550e-04 | 3.659354e-05 | 7.684644e-06 |
+| Cold              | 8.000000e-02 | 3.840000e-02 | 1.075200e-02 | 2.580480e-03 | 6.193152e-04 | 1.486356e-04 | 3.567256e-05 | 8.561413e-06 |
+
+
+
+
+$ sh run.sh '111'
+
+[Transition Probability Distribution]
+| From/To | Hot | Cold |
+| Start   | 0.8 | 0.2  |
+| Hot     | 0.7 | 0.3  |
+| Cold    | 0.4 | 0.6  |
+
+[Emission Probability Distribution]
+| Observation/State | Hot | Cold |
+| 1                 | 0.4 | 0.4  |
+| 2                 | 0.3 | 0.4  |
+| 3                 | 0.3 | 0.2  |
+
+Observed event sequence: 111
+MLE of the observed sequence: 2.508800e-02
+Predicted state sequence: HHH
+
+[Veterbi Table Probability Distribution]
+| State/Observation | (0) 1        | (1) 1        | (2) 1        |
+| Hot               | 3.200000e-01 | 8.960000e-02 | 2.508800e-02 |
+| Cold              | 8.000000e-02 | 3.840000e-02 | 1.075200e-02 |

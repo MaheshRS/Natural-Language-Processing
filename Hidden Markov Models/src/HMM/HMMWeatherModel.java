@@ -40,6 +40,7 @@ public class HMMWeatherModel {
     private int startStateRowIndex = 0, hotStateRowIndex = 1, coldStateRowIndex = 2;
     private int hotColumnIndex = 0, coldColumnIndex = 1;
     private double[][] transitionMatrix = new  double[3][2];
+    private static String endState = "\0";
 
     private int oneEmissionMatrixRowIndex = 0, twoEmissionMatrixRowIndex = 1, threeEmissionMatrixRowIndex = 2;
     private int hotColumnEmissionMatrixIndex = 0, coldEmissionMatrixIndex = 1;
@@ -47,7 +48,7 @@ public class HMMWeatherModel {
 
     Result result;
     ResultSet veterbiDistribution = new ResultSet("Veterbi Table Probability Distribution");
-    ArrayList<String> veterbiDistributionColumns = new ArrayList<>();
+    ArrayList<String> viterbiDistributionColumns = new ArrayList<>();
 
     private static void log (String s) {
         System.out.println(s);
@@ -67,7 +68,7 @@ public class HMMWeatherModel {
         result = estimateEventSequenceMLE(events, result);
         result.printResult();
 
-        veterbiDistribution.setColumns(veterbiDistributionColumns);
+        veterbiDistribution.setColumns(viterbiDistributionColumns);
         veterbiDistribution.Display();
     }
 
@@ -166,11 +167,15 @@ public class HMMWeatherModel {
     }
 
     private Result estimateEventSequenceMLE (ArrayList<String> events, Result result) {
-       StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
+        ArrayList<StateInfo> stateInfos = new ArrayList<StateInfo>();
 
         double probabilityHotState = 0.;
         double probabilityColdState = 0.;
         int idx = 0;
+
+        // Add the end state.
+        events.add(endState);
 
         // Records for display.
         Record hotStateRecord = Record.CreateRecord();
@@ -179,54 +184,89 @@ public class HMMWeatherModel {
         Record coldStateRecord = Record.CreateRecord();
         coldStateRecord.put("State/Observation", "Cold");
 
-        veterbiDistributionColumns.add("State/Observation");
+        viterbiDistributionColumns.add("State/Observation");
 
+        // backpointer.
+        StateInfo.State backPointer = StateInfo.State.kStateHot;
+
+        // Proceed with Viterbi distribution.
         for (String s : events) {
-            eventState event = getEventStateFromObservedEvent(Integer.valueOf(s));
-            int eventIndex  = eventIndex(event);
 
-            if (idx == 0) {
-                probabilityHotState = (transitionMatrix[startStateRowIndex][hotColumnIndex] * emissionMatrix[eventIndex(event)][hotColumnIndex]);
-                probabilityColdState = (transitionMatrix[startStateRowIndex][coldColumnIndex] * emissionMatrix[eventIndex(event)][coldColumnIndex]);
+            double emissionProbabilityGivenHotState = 1.0f;
+            double emissionProbabilityGivenColdState = 1.0f;
+            int eventIndex = 0;
+
+            if (!s.equalsIgnoreCase(endState)) {
+                eventState event = getEventStateFromObservedEvent(Integer.valueOf(s));
+                eventIndex = eventIndex(event);
+
+                emissionProbabilityGivenHotState = emissionMatrix[eventIndex][hotColumnIndex];
+                emissionProbabilityGivenColdState = emissionMatrix[eventIndex][coldColumnIndex];
+
+                if (idx == 0) {
+                    probabilityHotState = (transitionMatrix[startStateRowIndex][hotColumnIndex] * emissionProbabilityGivenHotState);
+                    probabilityColdState = (transitionMatrix[startStateRowIndex][coldColumnIndex] * emissionProbabilityGivenColdState);
+                }
+                else {
+                    double prevStateHotProbability = probabilityHotState;
+                    double prevStateColdProbability = probabilityColdState;
+
+                    // Weather State Hot.
+                    double phe = transitionMatrix[hotStateRowIndex][hotColumnIndex] * emissionProbabilityGivenHotState;
+                    double ph = prevStateHotProbability * phe;
+                    double phce = transitionMatrix[coldStateRowIndex][hotColumnIndex] * emissionProbabilityGivenHotState;
+                    double phc = prevStateColdProbability * phce;
+
+                    probabilityHotState = Math.max(ph, phc);
+
+                    // Weather State Cold.
+                    double pce = transitionMatrix[coldStateRowIndex][coldColumnIndex] * emissionProbabilityGivenColdState;
+                    double pc = prevStateColdProbability * pce;
+                    double pche = transitionMatrix[hotStateRowIndex][coldColumnIndex] * emissionProbabilityGivenColdState;
+                    double pch = prevStateHotProbability * pche;
+
+                    probabilityColdState = Math.max(pc, pch);
+
+                    StateInfo info = new StateInfo();
+                    info.setStateMLE(probabilityHotState, probabilityHotState);
+
+                    StateInfo.State hotStateInfluncer = ph > phc ? StateInfo.State.kStateHot: StateInfo.State.kStateCold;
+                    StateInfo.State coldStateInfluncer = pc > pch ? StateInfo.State.kStateCold: StateInfo.State.kStateHot;
+                    info.setInfluencialStateType(hotStateInfluncer, coldStateInfluncer);
+
+                    stateInfos.add(0, info);
+
+                }
+
+                /// Add the records.
+                String columnTitle = String.format("(%s) %s", idx, s);
+                viterbiDistributionColumns.add(String.valueOf(columnTitle));
+                hotStateRecord.put(String.valueOf(columnTitle), String.format("%e", probabilityHotState));
+                coldStateRecord.put(String.valueOf(columnTitle), String.format("%e", probabilityColdState));
             }
             else {
-                double prevStateHotProbability = probabilityHotState;
-                double prevStateColdProbability = probabilityColdState;
-
-                // Weather State Hot.
-                double phe = transitionMatrix[hotStateRowIndex][hotColumnIndex] * emissionMatrix[eventIndex][hotColumnIndex];
-                double ph = prevStateHotProbability * phe;
-                double phce = transitionMatrix[coldStateRowIndex][hotColumnIndex] * emissionMatrix[eventIndex][hotColumnIndex];
-                double phc = prevStateColdProbability * phce;
-
-                probabilityHotState = Math.max(ph, phc);
-
-                // Weather State Cold.
-                double pce = transitionMatrix[coldStateRowIndex][coldColumnIndex] * emissionMatrix[eventIndex][coldColumnIndex];
-                double pc = prevStateColdProbability * pce;
-                double pche = transitionMatrix[hotStateRowIndex][coldColumnIndex] * emissionMatrix[eventIndex][coldColumnIndex];
-                double pch = prevStateHotProbability * pche;
-
-                probabilityColdState = Math.max(pc, pch);
+                if (probabilityHotState > probabilityColdState) {
+                    builder.append("H");
+                    backPointer = StateInfo.State.kStateHot;
+                }
+                else {
+                    builder.append("C");
+                    backPointer = StateInfo.State.kStateCold;
+                }
             }
-
-            // Add the sequence.
-            if (probabilityHotState > probabilityColdState) {
-                builder.append("H");
-            }
-            else {
-                builder.append("C");
-            }
-
-            /// Add the records.
-            String columnTitle = String.format("(%s) %s", idx, s);
-            veterbiDistributionColumns.add(String.valueOf(columnTitle));
-            hotStateRecord.put(String.valueOf(columnTitle), String.format("%e", probabilityHotState));
-            coldStateRecord.put(String.valueOf(columnTitle), String.format("%e", probabilityColdState));
 
             idx ++;
         }
 
+
+        for (StateInfo info : stateInfos) {
+            backPointer = info.getInfluencer(backPointer);
+
+            String stateStr = backPointer == StateInfo.State.kStateHot ? "H" : "C";
+            builder.append(stateStr);
+        }
+
+        builder = builder.reverse();
         result.setMLEAndPredictedSequence(Math.max(probabilityHotState, probabilityColdState), builder.toString());
 
         // Update the result set.

@@ -81,7 +81,7 @@ public class ResultSet {
             System.out.println(recordString);
         }
 
-        //System.out.println(line);
+        System.out.println();
     }
 
     private String DisplayRecord(Record record, ArrayList<String> columns, HashMap<String, Integer> columnSizeMap) {
